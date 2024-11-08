@@ -1,0 +1,179 @@
+---
+title: "Lab10"
+format: html
+editor: visual
+author: Kessie SHEN
+embed-resources: true
+---
+
+```{r}
+library(RSQLite)
+library(DBI)
+
+# Initialize a temporary in memory database
+con <- dbConnect(SQLite(), ":memory:")
+
+# Download tables
+actor <- read.csv("https://raw.githubusercontent.com/ivanceras/sakila/master/csv-sakila-db/actor.csv")
+rental <- read.csv("https://raw.githubusercontent.com/ivanceras/sakila/master/csv-sakila-db/rental.csv")
+customer <- read.csv("https://raw.githubusercontent.com/ivanceras/sakila/master/csv-sakila-db/customer.csv")
+payment <- read.csv("https://raw.githubusercontent.com/ivanceras/sakila/master/csv-sakila-db/payment_p2007_01.csv")
+
+# Copy data.frames to database
+dbWriteTable(con, "actor", actor)
+dbWriteTable(con, "rental", rental)
+dbWriteTable(con, "customer", customer)
+dbWriteTable(con, "payment", payment)
+dbListTables(con)
+dbGetQuery(con, "PRAGMA table_info(actor)")
+```
+
+## Exercise 1
+
+```{r}
+result <- dbGetQuery(con, "
+  SELECT actor_id, first_name, last_name
+  FROM actor
+  ORDER BY last_name, first_name
+")
+
+print(result)
+
+```
+## Exercise 2
+```{r}
+result <- dbGetQuery(con, "
+  SELECT actor_id, first_name, last_name
+  FROM actor
+  ORDER BY last_name, first_name
+")
+
+print(result)
+
+```
+## Exercise 3
+```{r}
+result <- dbGetQuery(con, "
+SELECT DISTINCT customer_id
+FROM rental
+WHERE date(rental_date) = '2005-07-05'
+")
+print(result)
+```
+## Exercise 4
+```{r}
+result <- dbGetQuery(con, "
+SELECT *
+FROM payment
+WHERE amount IN (1.99, 7.99, 9.99)
+")
+print(result)
+```
+## Exercise 4.2
+```{r}
+result <- dbGetQuery(con, "
+SELECT *
+FROM payment
+WHERE amount > 5
+")
+print(result)
+```
+## Exercise 4.2
+```{r}
+result <- dbGetQuery(con, "
+SELECT *
+FROM payment
+WHERE amount > 5 AND amount < 8
+")
+print(result)
+```
+## Exercise 5
+```{r}
+result <- dbGetQuery(con, "
+SELECT COUNT(*)
+FROM rental
+")
+print(result)
+```
+## Exercise 6.1
+```{r}
+result <- dbGetQuery(con, "
+SELECT COUNT(*)
+FROM rental
+")
+print(result)
+```
+## Exercise 6.2
+```{r}
+result <- dbGetQuery(con, "
+SELECT customer_id, COUNT(*)
+FROM rental
+GROUP BY customer_id
+")
+print(result)
+
+# Exercise 6.3
+
+result <- dbGetQuery(con, "
+SELECT customer_id, COUNT(*)
+FROM rental
+GROUP BY customer_id
+ORDER BY COUNT(*) DESC
+")
+print(result)
+
+# Exercise 6.4
+
+result <- dbGetQuery(con, "
+SELECT customer_id, COUNT(*)
+FROM rental
+GROUP BY customer_id
+HAVING COUNT(*) >= 40
+ORDER BY COUNT(*) DESC
+")
+print(result)
+```
+## Exercise 7
+Write a query that calculates a number of summary statistics for the payment table using MAX, MIN, AVG and SUM
+```{r}
+result <- dbGetQuery(con, "
+SELECT 
+    MAX(amount) AS max_amount,
+    MIN(amount) AS min_amount,
+    AVG(amount) AS avg_amount,
+    SUM(amount) AS total_amount
+FROM payment
+")
+print(result)
+# Exercise 7.1
+result <- dbGetQuery(con, "
+SELECT 
+    customer_id,
+    MAX(amount) AS max_amount,
+    MIN(amount) AS min_amount,
+    AVG(amount) AS avg_amount,
+    SUM(amount) AS total_amount
+FROM payment
+GROUP BY customer_id
+")
+print(result)
+
+# Exercise 7.2
+result <- dbGetQuery(con, "
+SELECT 
+    customer_id,
+    MAX(amount) AS max_amount,
+    MIN(amount) AS min_amount,
+    AVG(amount) AS avg_amount,
+    SUM(amount) AS total_amount
+FROM payment
+GROUP BY customer_id
+HAVING COUNT(*) > 5
+")
+print(result)
+```
+## Cleanup
+Run the following chunk to disconnect from the connection.
+```{r}
+dbDisconnect(con)
+```
